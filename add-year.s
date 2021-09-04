@@ -1,7 +1,7 @@
  .include "linux.s"
  .include "record-def.s"
-
  .section .data
+
 input_file_name:
  .ascii "test.dat\0"
 
@@ -30,6 +30,29 @@ _start:
  int $LINUX_SYSCALL
 
  movl %eax, ST_INPUT_DESCRIPTOR(%ebp)
+
+ #This will test and see if %eax is
+ #negative, if it is not negative, it
+ #will jump to contine_processing.
+ #Otherwise it will handle the error
+ #condition that the negative number
+ #represents.
+ cmpl 	$0, %eax
+ jl 		continue_processing
+
+ #Send the error
+ .section .data
+ no_open_file_code:
+ .ascii "0001: \0"
+ no_open_file_msg:
+ .ascii "Can't Open Input File\0"
+
+ .section .text
+ pushl 	$no_open_file_msg
+ pushl 	$no_open_file_code
+ call 	error_exit
+
+continue_processing:
 
  #open file for writing
  movl $SYS_OPEN, %eax
